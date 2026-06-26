@@ -133,11 +133,7 @@ async function revokeInvite(invite) {
 
   try {
     await api.revokeAdminRegisterLink(invite.id);
-    invites.value = invites.value.map((item) =>
-      item.id === invite.id
-        ? { ...item, deletedAt: new Date().toISOString(), isAvailable: false }
-        : item
-    );
+    invites.value = invites.value.filter((item) => item.id !== invite.id);
   } catch (currentError) {
     error.value = currentError.message;
   }

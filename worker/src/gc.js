@@ -323,12 +323,23 @@ async function runHardDeleteInvitesStep(env, config, summary) {
     const { results } = await env.DB.prepare(
       `SELECT id
        FROM registration_invites
-       WHERE deleted_at IS NOT NULL
-         AND deleted_at < datetime('now', ?)
+       WHERE (
+           deleted_at IS NOT NULL
+           AND deleted_at < datetime('now', ?)
+         )
+         OR (
+           deleted_at IS NULL
+           AND consumed_at IS NOT NULL
+           AND consumed_at < datetime('now', ?)
+         )
        ORDER BY id ASC
        LIMIT ?`
     )
-      .bind(`-${config.softDeleteRetentionDays} day`, config.batchSize)
+      .bind(
+        `-${config.softDeleteRetentionDays} day`,
+        `-${config.softDeleteRetentionDays} day`,
+        config.batchSize
+      )
       .all();
 
     if (!results.length) {

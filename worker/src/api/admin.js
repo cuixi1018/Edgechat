@@ -135,6 +135,8 @@ export function registerAdminRoutes(app) {
        FROM registration_invites ri
        LEFT JOIN users creator ON creator.id = ri.created_by
        LEFT JOIN users consumer ON consumer.id = ri.consumed_by_user_id
+       WHERE ri.deleted_at IS NULL
+         AND ri.consumed_at IS NULL
        ORDER BY ri.created_at DESC`
     ).all();
 

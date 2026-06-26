@@ -18,6 +18,7 @@ import { registerMessageRoutes } from './api/messages.js';
 import { registerUploadRoutes } from './api/upload.js';
 import { ChannelRoom } from './do/ChannelRoom.js';
 import { Scheduler } from './do/Scheduler.js';
+import { UserInbox } from './do/UserInbox.js';
 import { runScheduledGc } from './gc.js';
 import { errorResponse, parseJsonRequest, publicFileUrl } from './utils.js';
 
@@ -120,7 +121,8 @@ app.post('/api/register-links/:token/register', async (c) => {
   await c.env.DB.prepare(
     `UPDATE registration_invites
      SET consumed_by_user_id = ?,
-         consumed_at = CURRENT_TIMESTAMP
+         consumed_at = CURRENT_TIMESTAMP,
+         deleted_at = CURRENT_TIMESTAMP
      WHERE id = ?
        AND consumed_at IS NULL
        AND deleted_at IS NULL`
@@ -478,4 +480,4 @@ export default {
     ctx.waitUntil(runScheduledGc(env));
   }
 };
-export { ChannelRoom, Scheduler };
+export { ChannelRoom, Scheduler, UserInbox };
