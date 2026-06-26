@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import MessageAttachment from './MessageAttachment.vue';
 import UiAvatar from '../ui/Avatar.vue';
 import UiButton from '../ui/Button.vue';
 import UiSurface from '../ui/Surface.vue';
@@ -109,15 +110,7 @@ defineExpose({
             <span>{{ formatTime(message.createdAt) }}</span>
           </div>
           <p v-if="message.content">{{ message.content }}</p>
-          <a
-            v-if="message.attachment"
-            :href="message.attachment.url"
-            target="_blank"
-            rel="noreferrer"
-            class="chat-bubble__attachment"
-          >
-            {{ message.attachment.name }}
-          </a>
+          <MessageAttachment v-if="message.attachment" :attachment="message.attachment" />
         </div>
       </article>
     </div>

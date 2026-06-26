@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import MessageAttachment from '../components/chat/MessageAttachment.vue';
+import PendingAttachmentPreview from '../components/chat/PendingAttachmentPreview.vue';
 import UiAvatar from '../components/ui/Avatar.vue';
 import UiBadge from '../components/ui/Badge.vue';
 import UiButton from '../components/ui/Button.vue';
@@ -453,15 +455,7 @@ onBeforeUnmount(() => {
                       <span>{{ formatTime(message.createdAt) }}</span>
                     </div>
                     <p v-if="message.content">{{ message.content }}</p>
-                    <a
-                      v-if="message.attachment"
-                      :href="message.attachment.url"
-                      target="_blank"
-                      rel="noreferrer"
-                      class="chat-bubble__attachment"
-                    >
-                      {{ message.attachment.name }}
-                    </a>
+                    <MessageAttachment v-if="message.attachment" :attachment="message.attachment" />
                   </div>
                 </article>
               </div>
@@ -469,8 +463,7 @@ onBeforeUnmount(() => {
 
             <footer class="chat-composer-shell">
               <div v-if="pendingAttachment" class="chat-composer__attachment">
-                <UiBadge variant="secondary">{{ pendingAttachment.name }}</UiBadge>
-                <UiButton variant="ghost" size="sm" @click="clearAttachment">移除</UiButton>
+                <PendingAttachmentPreview :attachment="pendingAttachment" @clear="clearAttachment" />
               </div>
 
               <label v-if="error" class="error-text chat-composer__error">{{ error }}</label>

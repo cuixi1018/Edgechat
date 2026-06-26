@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../api.js';
 import store from '../store.js';
+import MessageAttachment from '../components/chat/MessageAttachment.vue';
 import UiAvatar from '../components/ui/Avatar.vue';
 import UiBadge from '../components/ui/Badge.vue';
 import UiButton from '../components/ui/Button.vue';
@@ -113,15 +114,7 @@ onMounted(loadRoom);
                 <span>{{ formatTime(message.createdAt) }}</span>
               </div>
               <p v-if="message.content">{{ message.content }}</p>
-              <a
-                v-if="message.attachment"
-                :href="message.attachment.url"
-                target="_blank"
-                rel="noreferrer"
-                class="chat-bubble__attachment"
-              >
-                {{ message.attachment.name }}
-              </a>
+              <MessageAttachment v-if="message.attachment" :attachment="message.attachment" />
             </div>
           </article>
         </div>

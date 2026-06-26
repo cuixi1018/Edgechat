@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import UiBadge from '../ui/Badge.vue';
+import PendingAttachmentPreview from './PendingAttachmentPreview.vue';
 import UiButton from '../ui/Button.vue';
 import UiSurface from '../ui/Surface.vue';
 import UiTextarea from '../ui/Textarea.vue';
@@ -47,8 +47,7 @@ function openPicker() {
   <footer class="chat-composer-shell">
     <div class="chat-composer">
       <div v-if="pendingAttachment" class="chat-composer__attachment">
-        <UiBadge variant="secondary">{{ pendingAttachment.name }}</UiBadge>
-        <UiButton variant="ghost" size="sm" @click="emit('clear-attachment')">移除</UiButton>
+        <PendingAttachmentPreview :attachment="pendingAttachment" @clear="emit('clear-attachment')" />
       </div>
 
       <div v-if="error" class="error-banner">{{ error }}</div>
