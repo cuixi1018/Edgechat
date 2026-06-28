@@ -11,14 +11,15 @@ body,
 
 html {
   background: var(--bg);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 /* ===== 双色流体背景 ===== */
-
-/* 外层固定背景：奠定暖雾基底 */
-html {
-  background: var(--bg);
-}
 
 body {
   position: relative;
