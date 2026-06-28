@@ -1,4 +1,4 @@
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import api from "../api.js";
 import { dispatchAuthInvalid } from "../auth-storage.js";
 import { connectRoomSocket } from "../ws.js";
@@ -95,7 +95,9 @@ export function useChatRoom({
 	function scrollToBottom() {
 		const element = messagesEl.value;
 		if (element) {
-			element.scrollTop = element.scrollHeight;
+			requestAnimationFrame(() => {
+				element.scrollTop = element.scrollHeight;
+			});
 		}
 	}
 
@@ -541,6 +543,10 @@ export function useChatRoom({
 			groupSettingsSaving.value = false;
 		}
 	}
+
+	watch(messages, () => {
+		nextTick().then(scrollToBottom);
+	}, { flush: 'post' });
 
 	return {
 		groupMembers,
