@@ -102,19 +102,57 @@ watch(activeRoomKey, async (k) => {
   }
 });
 onMounted(() => { void bootstrap(); });
+function formatBubbleTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
 onBeforeUnmount(() => { disconnectSocket(); });
 </script>
 
 <template>
   <div class="chat-layout">
-    <aside class="sidebar">
-      <div class="sidebar-inner">
-        <div class="sidebar-section">
-          <button class="sidebar-user" @click="router.push('/settings')">
+    <!-- Far-Left Navigation Sidebar -->
+    <aside class="right-sidebar">
+      <div class="right-sidebar-inner">
+        <div class="right-sidebar-section right-sidebar-actions">
+          <button v-if="showAdminEntry" type="button" class="right-sidebar-action tooltip" data-tooltip="后台" @click="openAdmin">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+              <title>后台</title>
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="right-sidebar-section right-sidebar-user-group">
+          <button type="button" class="right-sidebar-user tooltip" data-tooltip="个人设置" @click="router.push('/settings')">
             <UiAvatar :src="session?.avatarUrl" :fallback="session?.displayName?.[0] || 'U'" size="sm" />
-            <div class="sidebar-label-group">
-              <span class="sidebar-label sidebar-user__name">{{ session?.displayName || '用户' }}</span>
-            </div>
+          </button>
+          <button type="button" class="right-sidebar-action right-sidebar-action--danger tooltip" data-tooltip="退出" @click="logout">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+              <title>退出</title>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Middle-Left Chat List Sidebar -->
+    <aside class="left-sidebar">
+      <div class="sidebar-inner">
+        <div class="sidebar-header">
+          <h1 class="brand-title">EdgeChat</h1>
+          <button type="button" class="header-action" @click="openCreateGroup" title="创建群聊">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <title>创建群聊</title>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
           </button>
         </div>
 
@@ -124,6 +162,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
           <div v-if="sidebarLoading" class="sidebar-hint">加载中...</div>
           <div v-else-if="!conversationItems.length" class="sidebar-hint">暂无会话</div>
           <button
+            type="button"
             v-for="item in conversationItems" :key="item.key"
             class="sidebar-item" :class="{ 'sidebar-item--active': activeRoomKey === item.key }"
             @click="selectConversation(item)"
@@ -138,34 +177,10 @@ onBeforeUnmount(() => { disconnectSocket(); });
             </div>
           </button>
         </div>
-
-        <div class="sidebar-divider"></div>
-
-        <div class="sidebar-section sidebar-actions">
-          <button class="sidebar-action" @click="openCreateGroup" title="创建群聊">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-            </svg>
-            <span class="sidebar-label">创建群聊</span>
-          </button>
-          <button v-if="showAdminEntry" class="sidebar-action" @click="openAdmin" title="后台">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-            </svg>
-            <span class="sidebar-label">后台</span>
-          </button>
-          <button class="sidebar-action sidebar-action--danger" @click="logout" title="退出">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            <span class="sidebar-label">退出</span>
-          </button>
-        </div>
       </div>
     </aside>
 
+    <!-- Right Main Chat Window -->
     <main class="chat-main">
       <template v-if="activeRoom">
         <header class="chat-header">
@@ -182,14 +197,13 @@ onBeforeUnmount(() => { disconnectSocket(); });
             v-for="msg in messages" :key="msg.id"
             class="message-row" :class="{ 'message-row--own': isOwnMessage(msg) }"
           >
-            <UiAvatar v-if="!isOwnMessage(msg)" :src="msg.sender.avatarUrl" :fallback="msg.sender.displayName?.[0] || '?'" size="sm" class="message-avatar" />
             <div class="message-bubble" :class="bubbleClass(msg, 0)">
-              <div class="message-meta">
-                <strong>{{ isOwnMessage(msg) ? '我' : msg.sender.displayName }}</strong>
-                <span>{{ formatTime(msg.createdAt) }}</span>
+              <div v-if="activeRoom.kind !== 'dm' && !isOwnMessage(msg)" class="message-sender-name">
+                {{ msg.sender.displayName }}
               </div>
               <p v-if="msg.content">{{ msg.content }}</p>
               <MessageAttachment v-if="msg.attachment" :attachment="msg.attachment" />
+              <span class="message-time">{{ formatBubbleTime(msg.createdAt) }}</span>
             </div>
           </article>
         </section>
@@ -203,6 +217,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
             <input ref="fileInputEl" type="file" class="composer-file-input" @change="uploadAttachment" />
             <button type="button" class="composer-btn" :disabled="!activeRoom" @click="openFilePicker">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+                <title>添加附件</title>
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
               </svg>
             </button>
@@ -212,6 +227,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
             />
             <button type="button" class="composer-send" :disabled="sending || !activeRoom" @click="sendMessage">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <title>发送</title>
                 <line x1="4" y1="12" x2="20" y2="12"/>
                 <polyline points="14 6 20 12 14 18"/>
               </svg>
@@ -274,34 +290,62 @@ onBeforeUnmount(() => { disconnectSocket(); });
 .chat-layout {
   display: flex;
   height: 100vh;
-  background: #f5f7fa;
+  background: #efeae2;
+  width: 100%;
 }
 
-.sidebar {
+.left-sidebar {
   flex-shrink: 0;
-  width: 68px;
+  width: 350px;
   height: 100vh;
-  padding: 10px 6px;
-  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   z-index: 10;
   overflow: hidden;
+  background: #ffffff;
+  border-right: 1px solid #e9edef;
 }
 
-.sidebar:hover {
-  width: 300px;
-}
-
-.sidebar-inner {
+.left-sidebar .sidebar-inner {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  padding: 14px 10px;
+  background: #ffffff;
   overflow: hidden;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  background: #ffffff;
+}
+
+.brand-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #008069;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.header-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #54656f;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.header-action:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111b21;
 }
 
 .sidebar-section {
@@ -313,20 +357,16 @@ onBeforeUnmount(() => { disconnectSocket(); });
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  margin: 0 -10px;
-  padding: 0 10px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  padding: 0;
 }
 
-.sidebar-list::-webkit-scrollbar { width: 3px; }
-.sidebar-list::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 2px; }
+.sidebar-list::-webkit-scrollbar { width: 4px; }
+.sidebar-list::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 2px; }
 
 .sidebar-divider {
   flex-shrink: 0;
   height: 1px;
-  margin: 8px 4px;
-  background: rgba(0, 0, 0, 0.06);
+  background: #f0f2f5;
 }
 
 .sidebar-hint {
@@ -335,80 +375,39 @@ onBeforeUnmount(() => { disconnectSocket(); });
   justify-content: center;
   padding: 24px 8px;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.3);
+  color: #8696a0;
 }
 
-.sidebar-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 6px 0;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  transition: background 150ms, padding 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.sidebar:not(:hover) .sidebar-user {
-  padding: 2px 0;
-}
-
-.sidebar-user:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.sidebar:hover .sidebar-user {
-  padding: 6px;
-}
-
-.sidebar-user svg,
-.sidebar-item svg,
-.sidebar-action svg {
+.sidebar-item svg {
   flex-shrink: 0;
 }
 
-.sidebar-user :deep(.ui-avatar),
+/* biome-ignore lint/correctness/noUnknownPseudoClass: Vue deep selector */
 .sidebar-item :deep(.ui-avatar) {
   flex-shrink: 0;
-}
-
-.sidebar-user__name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a2332;
 }
 
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 0;
+  gap: 12px;
+  width: calc(100% - 16px);
+  margin: 4px 8px;
+  padding: 12px 16px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   cursor: pointer;
   text-align: left;
-  transition: background 150ms, padding 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.sidebar:not(:hover) .sidebar-item {
-  padding: 2px 0;
+  transition: background 150ms;
 }
 
 .sidebar-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.sidebar:hover .sidebar-item {
-  padding: 8px;
+  background: #f5f6f6;
 }
 
 .sidebar-item--active {
-  background: rgba(59, 130, 246, 0.08);
+  background: #f0f2f5;
 }
 
 .sidebar-item__top {
@@ -419,106 +418,116 @@ onBeforeUnmount(() => { disconnectSocket(); });
 }
 
 .sidebar-item__top strong {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  color: #1a2332;
+  color: #111b21;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .sidebar-item__time {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  color: #667781;
   flex-shrink: 0;
 }
 
 .sidebar-item__preview {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.4);
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #667781;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.sidebar-actions {
+.right-sidebar {
+  flex-shrink: 0;
+  width: 68px;
+  height: 100vh;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  background: #f0f2f5;
+  border-right: 1px solid #e9edef;
+}
+
+.right-sidebar-inner {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.sidebar:not(:hover) .sidebar-actions {
+  justify-content: space-between;
+  background: #f0f2f5;
+  padding: 16px 8px;
   align-items: center;
-  gap: 6px;
 }
 
-.sidebar-action {
+.right-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+}
+
+.right-sidebar-user-group {
+  margin-top: auto;
+}
+
+.right-sidebar-action,
+.right-sidebar-user {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 0;
+  width: 42px;
+  height: 42px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50%;
   background: transparent;
+  color: #54656f;
   cursor: pointer;
-  text-align: left;
-  color: rgba(0, 0, 0, 0.4);
-  transition: background 150ms, color 150ms, padding 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.sidebar:not(:hover) .sidebar-action {
-  width: 36px;
-  height: 36px;
+  transition: background 150ms, color 150ms, transform 150ms;
   padding: 0;
-  gap: 0;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.025);
+  position: relative;
 }
 
-.sidebar-action:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: #1a2332;
+.right-sidebar-action:hover,
+.right-sidebar-user:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111b21;
 }
 
-.sidebar:not(:hover) .sidebar-action:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.sidebar:hover .sidebar-action {
-  padding: 8px;
-  justify-content: flex-start;
-}
-
-.sidebar-action--danger:hover {
-  background: rgba(254, 242, 242, 0.6);
+.right-sidebar-action--danger:hover {
+  background: rgba(254, 242, 242, 0.8);
   color: #dc2626;
 }
 
-.sidebar-label-group {
-  flex: 1;
-  min-width: 0;
+.tooltip {
+  position: relative;
 }
 
-.sidebar-label {
-  opacity: 0;
-  overflow: hidden;
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 120%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
   white-space: nowrap;
-  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1) 120ms;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.sidebar:not(:hover) .sidebar-label {
-  width: 0;
-  flex: none;
-  overflow: hidden;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar:hover .sidebar-label {
+.tooltip:hover::after {
   opacity: 1;
+  transform: translateY(-50%) translateX(4px);
 }
 
 .chat-main {
@@ -526,35 +535,27 @@ onBeforeUnmount(() => { disconnectSocket(); });
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-
-.sidebar:not(:hover) ~ .chat-main .chat-messages {
-  padding-left: 108px;
-}
-
-.sidebar:not(:hover) ~ .chat-main .chat-composer {
-  margin-left: 108px;
-  margin-right: 108px;
+  background: #efeae2;
 }
 
 .chat-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
-  padding: 20px 24px 12px;
-  background: transparent;
-  border-bottom: none;
+  padding: 10px 16px;
+  background: #f0f2f5;
+  border-bottom: 1px solid #e9edef;
 }
 
 .chat-header h2 {
   margin: 0;
-  padding: 6px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.08);
-  border-radius: 999px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111b21;
+  background: transparent;
+  border-radius: 0;
 }
 
 .chat-header__status {
@@ -571,11 +572,11 @@ onBeforeUnmount(() => { disconnectSocket(); });
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 48px;
+  padding: 20px 24px;
 }
 
 .chat-messages::-webkit-scrollbar { width: 6px; }
-.chat-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
 
 .load-more-btn {
   display: block;
@@ -584,7 +585,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
   border: 1px solid #e8ecf0;
   border-radius: 16px;
   background: #fff;
-  color: #6b7c93;
+  color: #54656f;
   font-size: 12px;
   cursor: pointer;
   transition: background 150ms, border-color 150ms;
@@ -600,88 +601,72 @@ onBeforeUnmount(() => { disconnectSocket(); });
   align-items: center;
   justify-content: center;
   padding: 64px 24px;
-  color: #9ca3af;
+  color: #8696a0;
   font-size: 14px;
 }
 
 .message-row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-  max-width: 840px;
-  align-items: flex-start;
+  margin-bottom: 12px;
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .message-row--own {
-  flex-direction: row-reverse;
-}
-
-.message-avatar {
-  flex-shrink: 0;
+  justify-content: flex-end;
 }
 
 .message-bubble {
-  max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 16px;
-  background: #fff;
-  border: 1px solid #e8ecf0;
+  max-width: 65%;
+  padding: 6px 10px 20px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: none;
+  position: relative;
+  word-break: break-word;
+  box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
 }
 
 .message-row--own .message-bubble {
-  background: #e8f0fe;
-  border-color: #d1e0fc;
+  background: #d9fdd3;
 }
 
-.message-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.message-sender-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #008069;
   margin-bottom: 4px;
 }
 
-.message-meta strong {
-  font-size: 12px;
-  font-weight: 500;
-  color: #1a2332;
-}
-
-.message-meta span {
+.message-time {
+  position: absolute;
+  bottom: 3px;
+  right: 7px;
   font-size: 11px;
-  color: #9ca3af;
+  color: #667781;
+  user-select: none;
 }
 
 .message-bubble p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #1a2332;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: #111b21;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-@keyframes composer-pulse {
-  0%, 100% { border-color: rgba(0, 0, 0, 0.08); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
-  50% { border-color: rgba(0, 0, 0, 0.14); box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.03); }
-}
-
 .chat-composer {
   margin-top: auto;
-  margin-bottom: 64px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: none;
+  margin-bottom: 0;
+  padding: 10px 16px;
+  background: #f0f2f5;
+  border-top: 1px solid #e9edef;
   position: relative;
   z-index: 2;
-  margin-left: 24px;
-  margin-right: 24px;
-  transition: border-color 300ms, box-shadow 300ms;
-}
-
-.chat-composer:focus-within {
-  animation: composer-pulse 2.4s ease-in-out infinite;
+  margin-left: 0;
+  margin-right: 0;
+  border-radius: 0;
 }
 
 .composer-attachment {
@@ -698,7 +683,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
 .composer-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .composer-file-input {
@@ -709,20 +694,20 @@ onBeforeUnmount(() => { disconnectSocket(); });
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50%;
   background: transparent;
-  color: #8b9db5;
+  color: #54656f;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 150ms, color 150ms;
 }
 
 .composer-btn:hover:not(:disabled) {
-  background: #f0f2f5;
-  color: #1a2332;
+  background: rgba(0, 0, 0, 0.05);
+  color: #111b21;
 }
 
 .composer-btn:disabled {
@@ -734,34 +719,38 @@ onBeforeUnmount(() => { disconnectSocket(); });
   flex: 1;
 }
 
+/* biome-ignore lint/correctness/noUnknownPseudoClass: Vue deep selector */
 :deep(.composer-input.ui-textarea) {
   border: none;
-  background: transparent;
+  background: #ffffff;
   box-shadow: none;
-  min-height: 36px;
-  padding: 8px 4px;
-  color: #1a2332;
-  font-size: 14px;
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #111b21;
+  font-size: 15px;
   resize: none;
 }
 
+/* biome-ignore lint/correctness/noUnknownPseudoClass: Vue deep selector */
 :deep(.composer-input.ui-textarea:focus) {
   border-color: transparent;
   box-shadow: none;
 }
 
+/* biome-ignore lint/correctness/noUnknownPseudoClass: Vue deep selector */
 :deep(.composer-input.ui-textarea::placeholder) {
-  color: #adbcc8;
+  color: #8696a0;
 }
 
 .composer-send {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
@@ -769,7 +758,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
 }
 
 .composer-send:hover:not(:disabled) {
-  background: #eff3ff;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .composer-send:disabled {
@@ -804,7 +793,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
   font-family: 'Georgia', 'Times New Roman', serif;
   font-style: italic;
   letter-spacing: 0.02em;
-  color: #1a2332;
+  color: #111b21;
 }
 
 .modal-overlay {
@@ -830,7 +819,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
   margin: 0 0 20px;
   font-size: 18px;
   font-weight: 600;
-  color: #1a2332;
+  color: #111b21;
 }
 
 .modal-input {
@@ -839,7 +828,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
   border: 1px solid #e8ecf0;
   border-radius: 10px;
   background: #f9fafb;
-  color: #1a2332;
+  color: #111b21;
   font-size: 14px;
   outline: none;
   transition: border-color 150ms, box-shadow 150ms;
@@ -847,13 +836,13 @@ onBeforeUnmount(() => { disconnectSocket(); });
 }
 
 .modal-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #008069;
+  box-shadow: 0 0 0 3px rgba(0, 128, 105, 0.1);
   background: #fff;
 }
 
 .modal-input::placeholder {
-  color: #9ca3af;
+  color: #8696a0;
 }
 
 .modal-members {
@@ -884,7 +873,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
   border: 1px solid #e8ecf0;
   border-radius: 20px;
   background: #fff;
-  color: #1a2332;
+  color: #111b21;
   font-size: 13px;
   cursor: pointer;
   transition: background 150ms, border-color 150ms;
@@ -896,7 +885,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
 
 .member-chip--selected {
   background: #e8f0fe;
-  border-color: #3b82f6;
+  border-color: #008069;
 }
 
 .modal-actions {
@@ -918,14 +907,14 @@ onBeforeUnmount(() => { disconnectSocket(); });
 
 .btn-secondary:hover {
   background: #f5f7fa;
-  color: #1a2332;
+  color: #111b21;
 }
 
 .btn-primary {
   padding: 10px 24px;
   border: none;
   border-radius: 10px;
-  background: #3b82f6;
+  background: #008069;
   color: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -934,7 +923,7 @@ onBeforeUnmount(() => { disconnectSocket(); });
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: #006e5a;
 }
 
 .btn-primary:disabled {
@@ -956,20 +945,20 @@ onBeforeUnmount(() => { disconnectSocket(); });
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    width: 0;
-    padding: 8px 0;
-    overflow: hidden;
-  }
-
-  .sidebar:hover {
+  .left-sidebar {
     width: 280px;
-    padding: 8px 4px;
   }
-
-  .sidebar-inner {
-    border-radius: 12px;
-    padding: 12px 8px;
+  .right-sidebar {
+    width: 60px;
+    padding: 10px 4px;
+  }
+  .right-sidebar-inner {
+    padding: 10px 4px;
+  }
+  .right-sidebar-action,
+  .right-sidebar-user {
+    width: 36px;
+    height: 36px;
   }
 }
 </style>

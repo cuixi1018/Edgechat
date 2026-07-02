@@ -101,8 +101,12 @@ body::after {
 }
 
 a {
-  color: inherit;
+  color: #2e82d2;
   text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 button,

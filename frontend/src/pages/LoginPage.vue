@@ -284,7 +284,7 @@ async function submit() {
   border: none;
   background: none;
   font-size: 13px;
-  color: #6a9fd8;
+  color: #2e82d2;
   cursor: pointer;
   transition: color 0.2s;
   opacity: 0;
@@ -292,6 +292,6 @@ async function submit() {
 }
 
 .register-link:hover {
-  color: #2c4a6e;
+  color: #2e82d2;
 }
 </style>
