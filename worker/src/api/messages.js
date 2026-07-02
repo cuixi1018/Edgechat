@@ -1,5 +1,5 @@
-import { listMessages, requireAccessibleRoom } from '../db.js';
-import { errorResponse, sanitizeLimit } from '../utils.js';
+import { listMessages, markRoomRead, requireAccessibleRoom } from '../db.js';
+import { errorResponse, parseJsonRequest, sanitizeLimit } from '../utils.js';
 
 export function registerMessageRoutes(app) {
   app.get('/api/messages', async (c) => {
@@ -26,6 +26,11 @@ export function registerMessageRoutes(app) {
     }
 
     const messages = await listMessages(c.env.DB, roomId, before, limit);
+    await markRoomRead(c.env.DB, {
+      channelId: roomId,
+      userId: session.userId
+    });
+
     return c.json({
       room: {
         id: Number(room.id),
@@ -35,5 +40,41 @@ export function registerMessageRoutes(app) {
       },
       messages
     });
+  });
+
+  app.post('/api/messages/read', async (c) => {
+    const session = c.get('session');
+    const payload = await parseJsonRequest(c.req.raw);
+    const kind = String(payload.kind || '');
+    const roomId = Number(payload.roomId);
+    const messageId = payload.messageId === undefined ? null : Number(payload.messageId);
+
+    if (
+      !['public', 'private', 'dm'].includes(kind) ||
+      !Number.isFinite(roomId) ||
+      (messageId !== null && !Number.isFinite(messageId))
+    ) {
+      return errorResponse('参数无效');
+    }
+
+    const room = await requireAccessibleRoom(
+      c.env.DB,
+      session.userId,
+      kind,
+      roomId,
+      session.isAdmin
+    );
+
+    if (!room) {
+      return errorResponse('无权访问该会话', 403);
+    }
+
+    const lastReadMessageId = await markRoomRead(c.env.DB, {
+      channelId: roomId,
+      userId: session.userId,
+      messageId
+    });
+
+    return c.json({ ok: true, lastReadMessageId });
   });
 }

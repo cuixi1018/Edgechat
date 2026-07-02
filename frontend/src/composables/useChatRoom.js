@@ -15,6 +15,8 @@ export function useChatRoom({
 	session,
 	error,
 	refreshSidebar,
+	markConversationRead,
+	applyConversationActivity,
 	canManageActiveRoom,
 	syncGroupSettingsForm,
 	groupSettingsForm,
@@ -98,6 +100,26 @@ export function useChatRoom({
 			requestAnimationFrame(() => {
 				element.scrollTop = element.scrollHeight;
 			});
+		}
+	}
+
+	function applyActiveRoomActivity(message) {
+		if (!activeRoom.value || !message) {
+			return;
+		}
+
+		applyConversationActivity?.({
+			kind: activeRoom.value.kind,
+			roomId: activeRoom.value.id,
+			lastMessageAt: message.createdAt,
+			unreadCount: 0,
+		});
+		markConversationRead?.(activeRoom.value.kind, activeRoom.value.id);
+
+		if (!isOwnMessage(message)) {
+			void api
+				.markRoomRead(activeRoom.value.kind, activeRoom.value.id, message.id)
+				.catch(() => {});
 		}
 	}
 
@@ -309,6 +331,7 @@ export function useChatRoom({
 						return;
 					}
 					messages.value = [...messages.value, payload.message];
+					applyActiveRoomActivity(payload.message);
 					nextTick().then(scrollToBottom);
 				}
 				if (payload.type === "error") {

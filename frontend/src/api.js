@@ -128,6 +128,17 @@ export default {
     }
     return request(`/messages?${query.toString()}`);
   },
+  markRoomRead(kind, roomId, messageId) {
+    return request('/messages/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: {
+        kind,
+        roomId,
+        ...(messageId ? { messageId } : {})
+      }
+    });
+  },
   openDm(userId) {
     return request('/dm/open', {
       method: 'POST',
@@ -149,6 +160,13 @@ export default {
   getRoomWebSocketUrl(kind, roomId) {
     const token = getStoredToken();
     const url = new URL(`/api/ws/${kind}/${roomId}`, window.location.origin);
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.searchParams.set('token', token || '');
+    return url.toString();
+  },
+  getInboxWebSocketUrl() {
+    const token = getStoredToken();
+    const url = new URL('/api/inbox/ws', window.location.origin);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     url.searchParams.set('token', token || '');
     return url.toString();

@@ -9,6 +9,7 @@ import api from '../api.js';
 import { useActiveRoom } from '../composables/useActiveRoom.js';
 import { useChatRoom } from '../composables/useChatRoom.js';
 import { useChatSidebar } from '../composables/useChatSidebar.js';
+import { useUnreadInbox } from '../composables/useUnreadInbox.js';
 import store from '../store.js';
 
 const router = useRouter();
@@ -22,7 +23,7 @@ const { activeRoomKey, canManageActiveRoom, applyActiveChannel, selectDm, roomLa
 
 const {
   channels, users, sidebarLoading, conversationItems, formatListTime,
-  refreshSidebar, openConversation
+  refreshSidebar, openConversation, markConversationRead, applyConversationActivity
 } = useChatSidebar({ error, applyActiveChannel, selectDm });
 
 const {
@@ -31,9 +32,16 @@ const {
   loadMessages, connectSocket, disconnectSocket, sendMessage, handleComposerKeydown,
   openFilePicker, uploadAttachment, clearAttachment, loadOlder
 } = useChatRoom({
-  activeRoom, channels, users, session, error, refreshSidebar, canManageActiveRoom,
+  activeRoom, channels, users, session, error, refreshSidebar,
+  markConversationRead, applyConversationActivity, canManageActiveRoom,
   syncGroupSettingsForm: () => {}, groupSettingsForm: { name: '', avatarUrl: '', avatarKey: '' },
   returnToConversationList: () => {}
+});
+
+const { connectUnreadInbox, disconnectUnreadInbox } = useUnreadInbox({
+  activeRoom,
+  markConversationRead,
+  applyConversationActivity
 });
 
 const wsConnected = computed(() => wsStatus.value === 'open');
@@ -101,7 +109,9 @@ watch(activeRoomKey, async (k) => {
     }
   }
 });
-onMounted(() => { void bootstrap(); });
+onMounted(() => {
+  void bootstrap().then(connectUnreadInbox);
+});
 function formatBubbleTime(value) {
   if (!value) return '';
   const date = new Date(value);
@@ -110,7 +120,10 @@ function formatBubbleTime(value) {
   return `${hours}:${minutes}`;
 }
 
-onBeforeUnmount(() => { disconnectSocket(); });
+onBeforeUnmount(() => {
+  disconnectUnreadInbox();
+  disconnectSocket();
+});
 </script>
 
 <template>
@@ -173,7 +186,12 @@ onBeforeUnmount(() => { disconnectSocket(); });
                 <strong class="sidebar-label">{{ item.title }}</strong>
                 <span class="sidebar-label sidebar-item__time">{{ formatListTime(item.lastMessageAt) }}</span>
               </div>
-              <p class="sidebar-label sidebar-item__preview">{{ item.subtitle }}</p>
+              <div class="sidebar-item__bottom">
+                <p class="sidebar-label sidebar-item__preview">{{ item.subtitle }}</p>
+                <span v-if="item.unreadCount > 0" class="sidebar-unread-badge">
+                  {{ item.unreadCount > 99 ? '99+' : item.unreadCount }}
+                </span>
+              </div>
             </div>
           </button>
         </div>
@@ -382,6 +400,11 @@ onBeforeUnmount(() => { disconnectSocket(); });
   flex-shrink: 0;
 }
 
+.sidebar-label-group {
+  flex: 1;
+  min-width: 0;
+}
+
 /* biome-ignore lint/correctness/noUnknownPseudoClass: Vue deep selector */
 .sidebar-item :deep(.ui-avatar) {
   flex-shrink: 0;
@@ -433,12 +456,37 @@ onBeforeUnmount(() => { disconnectSocket(); });
 }
 
 .sidebar-item__preview {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 13px;
   color: #667781;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sidebar-item__bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  min-width: 0;
+}
+
+.sidebar-unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #25d366;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .right-sidebar {

@@ -38,6 +38,7 @@ export function useChatSidebar({ error, applyActiveChannel, selectDm }) {
 			avatarUrl: dm.otherUser.avatarUrl,
 			fallback: dm.otherUser.displayName,
 			lastMessageAt: dm.lastMessageAt || "",
+			unreadCount: Number(dm.unreadCount || 0),
 			source: dm,
 		}));
 
@@ -53,6 +54,7 @@ export function useChatSidebar({ error, applyActiveChannel, selectDm }) {
 			avatarUrl: channel.avatarUrl || "",
 			fallback: channel.name ? channel.name.slice(0, 1) : "群",
 			lastMessageAt: channel.lastMessageAt || "",
+			unreadCount: Number(channel.unreadCount || 0),
 			source: channel,
 		}));
 
@@ -75,6 +77,46 @@ export function useChatSidebar({ error, applyActiveChannel, selectDm }) {
 			return "";
 		}
 		return new Date(value).toLocaleDateString();
+	}
+
+	function findConversationSource(kind, roomId) {
+		const list = kind === "dm" ? dms.value : channels.value;
+		return list.find(
+			(item) => item.kind === kind && Number(item.id) === Number(roomId),
+		);
+	}
+
+	function markConversationRead(kind, roomId) {
+		const source = findConversationSource(kind, roomId);
+		if (source) {
+			source.unreadCount = 0;
+		}
+	}
+
+	function applyConversationActivity({
+		kind,
+		roomId,
+		lastMessageAt,
+		unreadCount,
+	}) {
+		const source = findConversationSource(kind, roomId);
+		if (!source) {
+			return;
+		}
+
+		if (lastMessageAt) {
+			const currentTime = source.lastMessageAt
+				? new Date(source.lastMessageAt).getTime()
+				: 0;
+			const nextTime = new Date(lastMessageAt).getTime();
+			if (!currentTime || nextTime >= currentTime) {
+				source.lastMessageAt = lastMessageAt;
+			}
+		}
+
+		if (unreadCount !== undefined) {
+			source.unreadCount = Math.max(0, Number(unreadCount || 0));
+		}
 	}
 
 	function resetQuickActions() {
@@ -122,10 +164,14 @@ export function useChatSidebar({ error, applyActiveChannel, selectDm }) {
 	async function openConversation(item) {
 		if (item.kind === "dm") {
 			selectDm(item.source);
+			markConversationRead(item.kind, item.id);
+			void api.markRoomRead(item.kind, item.id).catch(() => {});
 			return;
 		}
 
 		await selectChannel(item.source);
+		markConversationRead(item.kind, item.id);
+		void api.markRoomRead(item.kind, item.id).catch(() => {});
 	}
 
 	async function openDmWithUser(user) {
@@ -168,6 +214,8 @@ export function useChatSidebar({ error, applyActiveChannel, selectDm }) {
 		usersWithoutDm,
 		conversationItems,
 		formatListTime,
+		markConversationRead,
+		applyConversationActivity,
 		toggleQuickActions,
 		setQuickActionMode,
 		refreshSidebar,

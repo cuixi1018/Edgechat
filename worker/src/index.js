@@ -358,7 +358,26 @@ app.get('/api/bootstrap', async (c) => {
            SELECT MAX(m.created_at)
            FROM messages m
            WHERE m.channel_id = c.id AND m.deleted_at IS NULL
-         ) AS last_message_at
+         ) AS last_message_at,
+         CASE
+           WHEN EXISTS (
+             SELECT 1 FROM channel_members cm
+             WHERE cm.channel_id = c.id AND cm.user_id = ?
+           ) THEN (
+             SELECT COUNT(*)
+             FROM messages m
+             WHERE m.channel_id = c.id
+               AND m.deleted_at IS NULL
+               AND m.sender_id != ?
+               AND m.id > COALESCE((
+                 SELECT mr.last_read_message_id
+                 FROM message_reads mr
+                 WHERE mr.channel_id = c.id
+                   AND mr.user_id = ?
+               ), 0)
+           )
+           ELSE 0
+         END AS unread_count
        FROM channels c
        LEFT JOIN users owner ON owner.id = c.created_by
        WHERE c.kind IN ('public', 'private')
@@ -372,7 +391,15 @@ app.get('/api/bootstrap', async (c) => {
          )
        ORDER BY CASE c.kind WHEN 'public' THEN 0 ELSE 1 END, c.name ASC`
     )
-      .bind(session.userId, session.userId, session.userId, session.userId)
+      .bind(
+        session.userId,
+        session.userId,
+        session.userId,
+        session.userId,
+        session.userId,
+        session.userId,
+        session.userId
+      )
       .all(),
     c.env.DB.prepare(
       `SELECT
@@ -386,7 +413,20 @@ app.get('/api/bootstrap', async (c) => {
            SELECT MAX(m.created_at)
            FROM messages m
            WHERE m.channel_id = c.id AND m.deleted_at IS NULL
-         ) AS last_message_at
+         ) AS last_message_at,
+         (
+           SELECT COUNT(*)
+           FROM messages m
+           WHERE m.channel_id = c.id
+             AND m.deleted_at IS NULL
+             AND m.sender_id != ?
+             AND m.id > COALESCE((
+               SELECT mr.last_read_message_id
+               FROM message_reads mr
+               WHERE mr.channel_id = c.id
+                 AND mr.user_id = ?
+             ), 0)
+         ) AS unread_count
        FROM channels c
        JOIN channel_members me ON me.channel_id = c.id AND me.user_id = ?
        JOIN channel_members peer ON peer.channel_id = c.id AND peer.user_id != ?
@@ -396,7 +436,7 @@ app.get('/api/bootstrap', async (c) => {
          AND other.deleted_at IS NULL
        ORDER BY last_message_at DESC NULLS LAST, c.id DESC`
     )
-      .bind(session.userId, session.userId)
+      .bind(session.userId, session.userId, session.userId, session.userId)
       .all()
   ]);
 
@@ -419,13 +459,15 @@ app.get('/api/bootstrap', async (c) => {
       myRole: row.my_role || '',
       canManage: Boolean(Number(row.can_manage)),
       memberCount: Number(row.member_count || 0),
-      lastMessageAt: row.last_message_at || null
+      lastMessageAt: row.last_message_at || null,
+      unreadCount: Number(row.unread_count || 0)
     })),
     dms: dmsResult.results.map((row) => ({
       id: Number(row.id),
       kind: 'dm',
       name: row.dm_key,
       lastMessageAt: row.last_message_at || null,
+      unreadCount: Number(row.unread_count || 0),
       otherUser: {
         id: Number(row.other_user_id),
         username: row.other_username,
@@ -458,6 +500,26 @@ app.get('/api/ws/:kind/:id', async (c) => {
   url.searchParams.set('kind', kind);
   url.searchParams.set('id', id);
   url.searchParams.set('token', session.token);
+
+  const headers = new Headers(c.req.raw.headers);
+  headers.set(INTERNAL_AUTH_HEADER, 'worker-verified');
+  headers.set(VERIFIED_USER_ID_HEADER, String(session.userId));
+  headers.set(VERIFIED_IS_ADMIN_HEADER, session.isAdmin ? '1' : '0');
+  headers.set(VERIFIED_AT_HEADER, String(Date.now()));
+
+  const request = new Request(url.toString(), {
+    method: c.req.raw.method,
+    headers
+  });
+
+  return stub.fetch(request);
+});
+
+app.get('/api/inbox/ws', async (c) => {
+  const session = c.get('session');
+  const stub = c.env.USER_INBOX.get(c.env.USER_INBOX.idFromName(`user:${session.userId}`));
+  const url = new URL(c.req.url);
+  url.pathname = '/connect';
 
   const headers = new Headers(c.req.raw.headers);
   headers.set(INTERNAL_AUTH_HEADER, 'worker-verified');

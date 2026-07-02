@@ -16,7 +16,20 @@ export function registerDmRoutes(app) {
            SELECT MAX(m.created_at)
            FROM messages m
            WHERE m.channel_id = c.id AND m.deleted_at IS NULL
-         ) AS last_message_at
+         ) AS last_message_at,
+         (
+           SELECT COUNT(*)
+           FROM messages m
+           WHERE m.channel_id = c.id
+             AND m.deleted_at IS NULL
+             AND m.sender_id != ?
+             AND m.id > COALESCE((
+               SELECT mr.last_read_message_id
+               FROM message_reads mr
+               WHERE mr.channel_id = c.id
+                 AND mr.user_id = ?
+             ), 0)
+         ) AS unread_count
        FROM channels c
        JOIN channel_members me ON me.channel_id = c.id AND me.user_id = ?
        JOIN channel_members peer ON peer.channel_id = c.id AND peer.user_id != ?
@@ -26,7 +39,7 @@ export function registerDmRoutes(app) {
          AND other.deleted_at IS NULL
        ORDER BY last_message_at DESC NULLS LAST, c.id DESC`
     )
-      .bind(session.userId, session.userId)
+      .bind(session.userId, session.userId, session.userId, session.userId)
       .all();
 
     return c.json({
@@ -35,6 +48,7 @@ export function registerDmRoutes(app) {
         kind: 'dm',
         name: row.dm_key,
         lastMessageAt: row.last_message_at || null,
+        unreadCount: Number(row.unread_count || 0),
         otherUser: {
           id: Number(row.other_user_id),
           username: row.other_username,

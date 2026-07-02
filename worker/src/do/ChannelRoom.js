@@ -1,4 +1,4 @@
-import { insertMessage, requireAccessibleRoom } from '../db.js';
+import { countUnreadMessages, insertMessage, listRoomMemberIds, requireAccessibleRoom } from '../db.js';
 import { validateSession } from '../session.js';
 import { pickAttachment } from '../utils.js';
 
@@ -191,9 +191,47 @@ export class ChannelRoom {
       });
 
       this.broadcast(packet);
+      await this.notifyUnreadRecipients(meta, saved);
     } catch (error) {
       sendSocketError(ws, error.message || 'Send failed');
     }
+  }
+
+  async notifyUnreadRecipients(meta, message) {
+    const memberIds = await listRoomMemberIds(this.env.DB, meta.room.id);
+    const recipientIds = memberIds.filter((userId) => userId !== meta.principal.userId);
+    await Promise.all(
+      recipientIds.map(async (userId) => {
+        try {
+          const unreadCount = await countUnreadMessages(this.env.DB, {
+            channelId: meta.room.id,
+            userId
+          });
+          const stub = this.env.USER_INBOX.get(this.env.USER_INBOX.idFromName(`user:${userId}`));
+
+          await stub.fetch('https://cfchat.internal/notify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              [INTERNAL_AUTH_HEADER]: 'worker-verified'
+            },
+            body: JSON.stringify({
+              type: 'room_message',
+              room: {
+                id: Number(meta.room.id),
+                kind: meta.room.kind,
+                name: meta.room.name
+              },
+              messageId: Number(message.id),
+              createdAt: message.createdAt,
+              unreadCount
+            })
+          });
+        } catch (error) {
+          console.warn('Failed to notify unread recipient', error);
+        }
+      })
+    );
   }
 
   webSocketClose(ws) {
