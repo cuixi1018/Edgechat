@@ -50,18 +50,8 @@ function toSessionVersion(value) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
-function parseAdminUsernames(env) {
-  return String(env.ADMIN_USERNAMES || '')
-    .split(',')
-    .map((username) => username.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-export function isAdminUser(env, user) {
-  const username = String(user?.username || '')
-    .trim()
-    .toLowerCase();
-  return Boolean(Number(user?.is_admin)) || parseAdminUsernames(env).includes(username);
+export function isAdminUser(_env, user) {
+  return Boolean(Number(user?.is_admin));
 }
 
 export async function putSession(env, session) {
