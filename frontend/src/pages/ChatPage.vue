@@ -336,22 +336,15 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 16px 16px 12px;
-  background: #f0f2f5;
-  border-bottom: 1px solid #e9edef;
+  background: #ffffff;
 }
 
 .brand-title {
   margin: 0;
-  font-size: 21px;
-  font-weight: 600;
-  color: #111b21;
-  letter-spacing: -0.3px;
-}
-
-.sidebar-header-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #008069;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .header-action {
@@ -390,8 +383,8 @@ onBeforeUnmount(() => {
 
 .sidebar-divider {
   flex-shrink: 0;
-  height: 0;
-  background: transparent;
+  height: 1px;
+  background: #f0f2f5;
 }
 
 .sidebar-hint {
@@ -421,16 +414,15 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
-  margin: 0;
+  width: calc(100% - 16px);
+  margin: 4px 8px;
   padding: 12px 16px;
   border: none;
-  border-radius: 0;
-  background: #ffffff;
+  border-radius: 12px;
+  background: transparent;
   cursor: pointer;
   text-align: left;
   transition: background 150ms;
-  border-bottom: 1px solid #f0f2f5;
 }
 
 .sidebar-item:hover {
@@ -455,32 +447,12 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
-}
-
-.sidebar-item--active .sidebar-item__top strong {
-  font-weight: 600;
 }
 
 .sidebar-item__time {
   font-size: 12px;
   color: #667781;
   flex-shrink: 0;
-}
-
-.sidebar-item__time--unread {
-  color: #25d366;
-  font-weight: 600;
-}
-
-.sidebar-item__bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
-  min-width: 0;
 }
 
 .sidebar-item__preview {
@@ -490,13 +462,14 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
 }
 
-.sidebar-item__preview--unread {
-  color: #111b21;
-  font-weight: 500;
+.sidebar-item__bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  min-width: 0;
 }
 
 .sidebar-unread-badge {
@@ -510,8 +483,8 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #25d366;
   color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -863,10 +836,12 @@ onBeforeUnmount(() => {
 }
 
 .empty-title {
-  font-size: 32px;
-  font-weight: 300;
-  letter-spacing: 0.5px;
-  color: #8696a0;
+  font-size: 28px;
+  font-weight: 400;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: #111b21;
 }
 
 .modal-overlay {

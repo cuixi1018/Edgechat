@@ -2,7 +2,6 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router.js';
 import store from './store.js';
-import './styles/whatsapp-theme.css';
 import './styles/base.css';
 import './styles.css';
 import './styles-liquid.css';
