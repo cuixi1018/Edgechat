@@ -1,4 +1,5 @@
 const encoder = new TextEncoder();
+
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 function toBase64Url(bytes) {
@@ -22,7 +23,6 @@ export async function hashPassword(password, salt = null) {
     false,
     ['deriveBits']
   );
-
   const bits = await crypto.subtle.deriveBits(
     {
       name: 'PBKDF2',
@@ -33,7 +33,6 @@ export async function hashPassword(password, salt = null) {
     keyMaterial,
     256
   );
-
   return {
     salt: passwordSalt,
     hash: toBase64Url(new Uint8Array(bits))
@@ -50,6 +49,21 @@ function toSessionVersion(value) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
+function parseAdminUsernames(env) {
+  return String(env.ADMIN_USERNAMES || '')
+    .split(',')
+    .map((username) => username.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+// 仅用于注册环节的用户名占用检查，防止有人注册出跟管理员同名(忽略大小写)的账号用于钓鱼/混淆。
+// 不再作为权限判定依据。
+export function isConfiguredAdminUsername(env, username) {
+  const normalizedUsername = String(username || '').trim().toLowerCase();
+  return Boolean(normalizedUsername) && parseAdminUsernames(env).includes(normalizedUsername);
+}
+
+// 权限判定唯一依据：数据库中的 is_admin 字段，不再比对用户名。
 export function isAdminUser(_env, user) {
   return Boolean(Number(user?.is_admin));
 }
@@ -81,12 +95,10 @@ export async function getSession(env, token) {
   if (!token) {
     return null;
   }
-
   const raw = await env.SESSIONS.get(token);
   if (!raw) {
     return null;
   }
-
   const session = JSON.parse(raw);
   session.token = token;
   if (session.sessionVersion === undefined) {
