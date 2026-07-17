@@ -145,9 +145,9 @@ onBeforeUnmount(() => {
           <button type="button" class="right-sidebar-user tooltip" data-tooltip="个人设置" @click="router.push('/settings')">
             <UiAvatar :src="session?.avatarUrl" :fallback="session?.displayName?.[0] || 'U'" size="sm" />
           </button>
-          <button type="button" class="right-sidebar-action right-sidebar-action--danger tooltip" data-tooltip="退�? @click="logout">
+          <button type="button" class="right-sidebar-action right-sidebar-action--danger tooltip" data-tooltip="退出" @click="logout">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
-              <title>退�?/title>
+              <title>退出</title>
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
           </button>
@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
     <aside class="left-sidebar">
       <div class="sidebar-inner">
         <div class="sidebar-header">
-          <h1 class="brand-title">Xiliao</h1>
+          <h1 class="brand-title">EdgeChat</h1>
           <button type="button" class="header-action" @click="openCreateGroup" title="创建群聊">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
               <title>创建群聊</title>
@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
         <div class="sidebar-divider"></div>
 
         <div class="sidebar-section sidebar-list">
-          <div v-if="sidebarLoading" class="sidebar-hint">加载�?..</div>
+          <div v-if="sidebarLoading" class="sidebar-hint">加载中...</div>
           <div v-else-if="!conversationItems.length" class="sidebar-hint">暂无会话</div>
           <button
             type="button"
@@ -208,7 +208,7 @@ onBeforeUnmount(() => {
 
         <section ref="messagesEl" class="chat-messages">
           <button v-if="messages.length" type="button" class="load-more-btn" @click="loadOlder">加载更早</button>
-          <div v-if="loading" class="messages-hint">加载�?..</div>
+          <div v-if="loading" class="messages-hint">加载中...</div>
           <div v-else-if="!messages.length" class="messages-hint">暂无消息</div>
 
           <article
@@ -245,7 +245,7 @@ onBeforeUnmount(() => {
             />
             <button type="button" class="composer-send" :disabled="sending || !activeRoom" @click="sendMessage">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <title>发�?/title>
+                <title>发送</title>
                 <line x1="4" y1="12" x2="20" y2="12"/>
                 <polyline points="14 6 20 12 14 18"/>
               </svg>
@@ -257,7 +257,7 @@ onBeforeUnmount(() => {
       <div v-else class="chat-empty">
         <div class="empty-content">
           <div class="empty-brand">
-            <span class="empty-title">Xiliao</span>
+            <span class="empty-title">EdgeChat</span>
           </div>
         </div>
       </div>
@@ -295,7 +295,7 @@ onBeforeUnmount(() => {
               :disabled="!createGroupForm.name.trim() || creatingGroup"
               @click="createGroup"
             >
-              {{ creatingGroup ? '创建�?..' : '创建' }}
+              {{ creatingGroup ? '创建中...' : '创建' }}
             </button>
           </div>
         </div>
