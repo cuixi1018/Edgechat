@@ -1,4 +1,4 @@
-ï»¿<script setup>
+<script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api.js';
@@ -20,7 +20,7 @@ const iconFileInputEl = ref(null);
 const copiedInviteId = ref(0);
 
 const siteForm = reactive({
-  siteName: 'Edgechat',
+  siteName: 'Xiliao',
   siteIconUrl: '',
   allowPublicRegister: false
 });
@@ -43,7 +43,7 @@ async function loadOverview() {
     users.value = payload.users;
     channels.value = payload.channels;
     dms.value = payload.dms;
-    siteForm.siteName = payload.site?.siteName || 'Edgechat';
+    siteForm.siteName = payload.site?.siteName || 'Xiliao';
     siteForm.siteIconUrl = payload.site?.siteIconUrl || '';
     siteForm.allowPublicRegister = payload.site?.allowPublicRegister || false;
     const invitePayload = await api.listAdminRegisterLinks();
@@ -122,12 +122,12 @@ async function copyInvite(invite) {
       }
     }, 1600);
   } catch {
-    error.value = 'å¤åˆ¶å¤±è´¥ï¼Œè¯·æ‰‹åŠ¨å¤åˆ¶é“¾æ¥';
+    error.value = '¸´ÖÆÊ§°Ü£¬ÇëÊÖ¶¯¸´ÖÆÁ´½Ó';
   }
 }
 
 async function revokeInvite(invite) {
-  if (!window.confirm('ç¡®è®¤åœç”¨è¿™ä¸ªæ³¨å†Œé“¾æ¥å—ï¼Ÿ')) {
+  if (!window.confirm('È·ÈÏÍ£ÓÃÕâ¸ö×¢²áÁ´½ÓÂğ£¿')) {
     return;
   }
 
@@ -146,49 +146,49 @@ onMounted(loadOverview);
   <div class="admin-section">
     <header class="admin-section__header">
       <div class="admin-section__heading">
-        <h1>ç½‘ç«™è®¾ç½®</h1>
-        <p>æŸ¥çœ‹ç«™ç‚¹æ¦‚å†µï¼Œå¹¶å¤„ç†åå°çº§çš„ç¾¤ç»„åˆ›å»ºä¸ç®¡ç†å…¥å£ã€‚</p>
+        <h1>ÍøÕ¾ÉèÖÃ</h1>
+        <p>²é¿´Õ¾µã¸Å¿ö£¬²¢´¦ÀíºóÌ¨¼¶µÄÈº×é´´½¨Óë¹ÜÀíÈë¿Ú¡£</p>
       </div>
-      <UiButton variant="secondary" @click="loadOverview">åˆ·æ–°æ¦‚å†µ</UiButton>
+      <UiButton variant="secondary" @click="loadOverview">Ë¢ĞÂ¸Å¿ö</UiButton>
     </header>
 
     <div class="admin-section__body">
       <p v-if="error" class="error-text">{{ error }}</p>
-      <p v-if="loading" class="muted">ç«™ç‚¹æ¦‚å†µåŠ è½½ä¸­...</p>
+      <p v-if="loading" class="muted">Õ¾µã¸Å¿ö¼ÓÔØÖĞ...</p>
 
       <section class="admin-metric-grid admin-metric-grid--wide">
         <UiSurface class="admin-metric-card">
           <strong>{{ users.length }}</strong>
-          <span>ç«™å†…ç”¨æˆ·</span>
+          <span>Õ¾ÄÚÓÃ»§</span>
         </UiSurface>
         <UiSurface class="admin-metric-card">
           <strong>{{ publicGroupCount }}</strong>
-          <span>å…¬å¼€ç¾¤ç»„</span>
+          <span>¹«¿ªÈº×é</span>
         </UiSurface>
         <UiSurface class="admin-metric-card">
           <strong>{{ privateGroupCount }}</strong>
-          <span>ç§æœ‰ç¾¤ç»„</span>
+          <span>Ë½ÓĞÈº×é</span>
         </UiSurface>
         <UiSurface class="admin-metric-card">
           <strong>{{ dms.length }}</strong>
-          <span>ç§ä¿¡ä¼šè¯</span>
+          <span>Ë½ĞÅ»á»°</span>
         </UiSurface>
       </section>
 
       <section class="admin-grid admin-grid--two">
         <UiSurface class="panel">
-          <h3 class="panel-title">ç«™ç‚¹å¤–è§‚</h3>
+          <h3 class="panel-title">Õ¾µãÍâ¹Û</h3>
           <label class="field">
-            <span>ç«™ç‚¹åç§°</span>
-            <input v-model.trim="siteForm.siteName" placeholder="ä¾‹å¦‚ï¼šEdgechat" />
+            <span>Õ¾µãÃû³Æ</span>
+            <input v-model.trim="siteForm.siteName" placeholder="ÀıÈç£ºXiliao" />
           </label>
           <label class="field">
-            <span>ç«™ç‚¹å›¾æ ‡ URL</span>
-            <input v-model.trim="siteForm.siteIconUrl" placeholder="/files/... æˆ– https://..." />
+            <span>Õ¾µãÍ¼±ê URL</span>
+            <input v-model.trim="siteForm.siteIconUrl" placeholder="/files/... »ò https://..." />
           </label>
           <label class="field field--checkbox">
             <input type="checkbox" v-model="siteForm.allowPublicRegister" />
-            <span>å…è®¸å…¬å¼€æ³¨å†Œï¼ˆç”¨æˆ·å¯è‡ªè¡Œæ³¨å†Œè´¦å·ï¼‰</span>
+            <span>ÔÊĞí¹«¿ª×¢²á£¨ÓÃ»§¿É×ÔĞĞ×¢²áÕËºÅ£©</span>
           </label>
           <div class="inline-actions">
             <input
@@ -199,10 +199,10 @@ onMounted(loadOverview);
               @change="uploadSiteIcon"
             />
             <UiButton variant="secondary" size="sm" :disabled="iconUploading" @click="openIconPicker">
-              {{ iconUploading ? 'ä¸Šä¼ ä¸­...' : 'ä¸Šä¼ å›¾æ ‡' }}
+              {{ iconUploading ? 'ÉÏ´«ÖĞ...' : 'ÉÏ´«Í¼±ê' }}
             </UiButton>
             <UiButton :disabled="savingSite" @click="saveSiteSettings">
-              {{ savingSite ? 'ä¿å­˜ä¸­...' : 'ä¿å­˜è®¾ç½®' }}
+              {{ savingSite ? '±£´æÖĞ...' : '±£´æÉèÖÃ' }}
             </UiButton>
           </div>
           <div class="admin-site-preview">
@@ -214,24 +214,24 @@ onMounted(loadOverview);
               <span v-else>{{ siteForm.siteName.slice(0, 1) || 'C' }}</span>
             </div>
             <div class="admin-site-preview__meta">
-              <strong>{{ siteForm.siteName || 'Edgechat' }}</strong>
-              <span>{{ siteForm.siteIconUrl || 'æœªè®¾ç½®å›¾æ ‡ URL' }}</span>
+              <strong>{{ siteForm.siteName || 'Xiliao' }}</strong>
+              <span>{{ siteForm.siteIconUrl || 'Î´ÉèÖÃÍ¼±ê URL' }}</span>
             </div>
           </div>
         </UiSurface>
 
         <UiSurface class="panel">
-          <h3 class="panel-title">æ³¨å†Œé“¾æ¥</h3>
+          <h3 class="panel-title">×¢²áÁ´½Ó</h3>
           <label class="field">
-            <span>é“¾æ¥å¤‡æ³¨</span>
-            <input v-model.trim="inviteForm.note" placeholder="ä¾‹å¦‚ï¼šå››æœˆæ–°æˆå‘˜å…¥å£" />
+            <span>Á´½Ó±¸×¢</span>
+            <input v-model.trim="inviteForm.note" placeholder="ÀıÈç£ºËÄÔÂĞÂ³ÉÔ±Èë¿Ú" />
           </label>
           <UiButton block :disabled="inviteSubmitting" @click="createInvite">
-            {{ inviteSubmitting ? 'åˆ›å»ºä¸­...' : 'åˆ›å»ºä¸€æ¬¡æ€§æ³¨å†Œé“¾æ¥' }}
+            {{ inviteSubmitting ? '´´½¨ÖĞ...' : '´´½¨Ò»´ÎĞÔ×¢²áÁ´½Ó' }}
           </UiButton>
 
           <div class="invite-list">
-            <div v-if="!invites.length" class="muted">è¿˜æ²¡æœ‰æ³¨å†Œé“¾æ¥ã€‚</div>
+            <div v-if="!invites.length" class="muted">»¹Ã»ÓĞ×¢²áÁ´½Ó¡£</div>
             <UiSurface
               v-for="invite in invites"
               :key="invite.id"
@@ -240,14 +240,14 @@ onMounted(loadOverview);
             >
               <div class="admin-invite-card__head">
                 <div>
-                  <strong>{{ invite.note || 'æœªå‘½åæ³¨å†Œé“¾æ¥' }}</strong>
+                  <strong>{{ invite.note || 'Î´ÃüÃû×¢²áÁ´½Ó' }}</strong>
                   <p>
-                    {{ invite.isAvailable ? 'å¯ç”¨ï¼Œé™ 1 äººæ³¨å†Œ' : invite.deletedAt ? 'å·²åœç”¨' : 'å·²ä½¿ç”¨' }}
+                    {{ invite.isAvailable ? '¿ÉÓÃ£¬ÏŞ 1 ÈË×¢²á' : invite.deletedAt ? 'ÒÑÍ£ÓÃ' : 'ÒÑÊ¹ÓÃ' }}
                   </p>
                 </div>
                 <div class="inline-actions">
                   <UiButton variant="secondary" size="sm" @click="copyInvite(invite)">
-                    {{ copiedInviteId === invite.id ? 'å·²å¤åˆ¶' : 'å¤åˆ¶é“¾æ¥' }}
+                    {{ copiedInviteId === invite.id ? 'ÒÑ¸´ÖÆ' : '¸´ÖÆÁ´½Ó' }}
                   </UiButton>
                   <UiButton
                     v-if="invite.isAvailable"
@@ -255,42 +255,42 @@ onMounted(loadOverview);
                     size="sm"
                     @click="revokeInvite(invite)"
                   >
-                    åœç”¨
+                    Í£ÓÃ
                   </UiButton>
                 </div>
               </div>
               <div class="admin-invite-card__url">{{ inviteLinkUrl(invite.token) }}</div>
               <div class="admin-invite-card__meta">
-                <span>åˆ›å»ºè€…ï¼š{{ invite.creatorDisplayName }}</span>
-                <span>åˆ›å»ºæ—¶é—´ï¼š{{ new Date(invite.createdAt).toLocaleString() }}</span>
-                <span v-if="invite.consumerDisplayName">ä½¿ç”¨è€…ï¼š{{ invite.consumerDisplayName }}</span>
+                <span>´´½¨Õß£º{{ invite.creatorDisplayName }}</span>
+                <span>´´½¨Ê±¼ä£º{{ new Date(invite.createdAt).toLocaleString() }}</span>
+                <span v-if="invite.consumerDisplayName">Ê¹ÓÃÕß£º{{ invite.consumerDisplayName }}</span>
               </div>
             </UiSurface>
           </div>
         </UiSurface>
 
         <UiSurface class="panel">
-          <h3 class="panel-title">åå°å…¥å£è¯´æ˜</h3>
+          <h3 class="panel-title">ºóÌ¨Èë¿ÚËµÃ÷</h3>
           <div class="admin-notes-grid">
             <div class="admin-note">
-              <strong>ç”¨æˆ·ç®¡ç†</strong>
-              <span>è´Ÿè´£è´¦å·ç”Ÿå‘½å‘¨æœŸï¼ŒåŒ…æ‹¬åˆ›å»ºã€ç¦ç”¨ã€åˆ å·å’Œå¯†ç é‡ç½®ã€‚</span>
+              <strong>ÓÃ»§¹ÜÀí</strong>
+              <span>¸ºÔğÕËºÅÉúÃüÖÜÆÚ£¬°üÀ¨´´½¨¡¢½ûÓÃ¡¢É¾ºÅºÍÃÜÂëÖØÖÃ¡£</span>
             </div>
             <div class="admin-note">
-              <strong>æ¶ˆæ¯æŸ¥çœ‹</strong>
-              <span>è´Ÿè´£å…¨ç«™æ¶ˆæ¯æ£€ç´¢ï¼Œä»¥åŠæ‰“å¼€ä»»æ„ç¾¤ç»„å’Œç§ä¿¡çš„å®Œæ•´å¯¹è¯ã€‚</span>
+              <strong>ÏûÏ¢²é¿´</strong>
+              <span>¸ºÔğÈ«Õ¾ÏûÏ¢¼ìË÷£¬ÒÔ¼°´ò¿ªÈÎÒâÈº×éºÍË½ĞÅµÄÍêÕû¶Ô»°¡£</span>
             </div>
             <div class="admin-note">
-              <strong>ç½‘ç«™è®¾ç½®</strong>
-              <span>è´Ÿè´£åå°çº§é…ç½®å…¥å£å’Œå¹³å°è¿è¡Œæ¦‚å†µï¼Œä¸å†æ··å…¥æ¶ˆæ¯å·¡æ£€æ“ä½œã€‚</span>
+              <strong>ÍøÕ¾ÉèÖÃ</strong>
+              <span>¸ºÔğºóÌ¨¼¶ÅäÖÃÈë¿ÚºÍÆ½Ì¨ÔËĞĞ¸Å¿ö£¬²»ÔÙ»ìÈëÏûÏ¢Ñ²¼ì²Ù×÷¡£</span>
             </div>
           </div>
           <div class="inline-actions">
             <UiButton variant="secondary" size="sm" @click="router.push('/admin/users')">
-              å»ç”¨æˆ·ç®¡ç†
+              È¥ÓÃ»§¹ÜÀí
             </UiButton>
             <UiButton variant="secondary" size="sm" @click="router.push('/admin/messages')">
-              å»æ¶ˆæ¯æŸ¥çœ‹
+              È¥ÏûÏ¢²é¿´
             </UiButton>
           </div>
         </UiSurface>

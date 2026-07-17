@@ -14,7 +14,7 @@ const state = reactive({
   token: getStoredToken(),
   session: null,
   site: {
-    siteName: 'Edgechat',
+    siteName: 'Xiliao',
     siteIconUrl: ''
   }
 });
@@ -26,7 +26,7 @@ function clearAuthState() {
 }
 
 function applySiteMetadata(site) {
-  const siteName = String(site?.siteName || 'Edgechat').trim() || 'Edgechat';
+  const siteName = String(site?.siteName || 'Xiliao').trim() || 'Xiliao';
   const siteIconUrl = String(site?.siteIconUrl || '').trim();
   document.title = siteName;
 
@@ -99,7 +99,7 @@ function setSession(session) {
 
 function setSite(site) {
   state.site = {
-    siteName: String(site?.siteName || 'Edgechat').trim() || 'Edgechat',
+    siteName: String(site?.siteName || 'Xiliao').trim() || 'Xiliao',
     siteIconUrl: String(site?.siteIconUrl || '').trim()
   };
   applySiteMetadata(state.site);

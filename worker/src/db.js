@@ -46,7 +46,7 @@ export async function getSiteSettings(db) {
 
   const map = Object.fromEntries(results.map((row) => [row.setting_key, row.setting_value]));
   return {
-    siteName: String(map.site_name || 'Edgechat'),
+    siteName: String(map.site_name || 'Xiliao'),
     siteIconUrl: String(map.site_icon_url || '')
   };
 }
@@ -64,7 +64,7 @@ export async function updateSiteSettings(db, { siteName, siteIconUrl }) {
            SET setting_value = excluded.setting_value,
                updated_at = CURRENT_TIMESTAMP`
         )
-        .bind(String(siteName || 'Edgechat').trim() || 'Edgechat')
+        .bind(String(siteName || 'Xiliao').trim() || 'Xiliao')
     );
   }
 
