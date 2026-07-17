@@ -87,6 +87,18 @@ async function submit() {
       >
         没有账号？去注册
       </button>
+
+      <!-- ===== 新增：熙熙安全账号注册入口 ===== -->
+      <div class="oauth-divider">
+        <span>或</span>
+      </div>
+      <a
+        href="https://reg.xl.cuixi.qzz.io/"
+        target="_blank"
+        class="oauth-register-btn"
+      >
+        🚀 使用熙熙安全账号注册
+      </a>
     </div>
   </div>
 </template>
@@ -293,5 +305,52 @@ async function submit() {
 
 .register-link:hover {
   color: #2e82d2;
+}
+
+.oauth-divider {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+  margin: 16px 0 8px;
+  position: relative;
+  opacity: 0;
+  animation: riseUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 2.0s forwards;
+}
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ddd;
+}
+.oauth-divider::before { left: 0; }
+.oauth-divider::after { right: 0; }
+.oauth-divider span {
+  background: #f5f5f5;
+  padding: 0 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.oauth-register-btn {
+  display: inline-block;
+  padding: 10px 28px;
+  background: linear-gradient(135deg, #4A90D9, #357ABD);
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s;
+  margin-top: 10px;
+  opacity: 0;
+  animation: riseUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 2.2s forwards;
+}
+.oauth-register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 217, 0.4);
 }
 </style>
