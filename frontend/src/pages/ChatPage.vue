@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
     <aside class="left-sidebar">
       <div class="sidebar-inner">
         <div class="sidebar-header">
-          <h1 class="brand-title">EdgeChat</h1>
+          <h1 class="brand-title">Xiliao</h1>
           <button type="button" class="header-action" @click="openCreateGroup" title="创建群聊">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
               <title>创建群聊</title>
@@ -257,7 +257,7 @@ onBeforeUnmount(() => {
       <div v-else class="chat-empty">
         <div class="empty-content">
           <div class="empty-brand">
-            <span class="empty-title">EdgeChat</span>
+            <span class="empty-title">Xiliao</span>
           </div>
         </div>
       </div>
